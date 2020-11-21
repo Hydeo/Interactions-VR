@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1024667113863119518}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.9311936, y: 1.4656712, z: 0.7670554}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -43,6 +43,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0be18fa541ce0aa4fbb3ccc954d75d44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  showController: 0
   inputDeviceCharacteristics: 576
   controllersPrefabs:
   - {fileID: -927199367670048503, guid: 3ad3c8a0cd60ccd489485ec2973dd9bf, type: 3}
@@ -55,3 +56,5 @@ MonoBehaviour:
   - {fileID: -927199367670048503, guid: b165cfd94b7c7584c960a16f595bbc5e, type: 3}
   - {fileID: 7516855720686897749, guid: 869fbfbdf5b9d8447bcd15cbb72e452f, type: 3}
   - {fileID: 6633377121454676404, guid: 6a3bd19aebf9da14bb8cdb0d6b397c8c, type: 3}
+  handModelPrefab: {fileID: 5686134208185362930, guid: 1fd3a7c43c8190f4d8c167ebde694364,
+    type: 3}
