@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 
 [AddComponentMenu("Nokobot/Modern Guns/Simple Shoot")]
 public class SimpleShoot : MonoBehaviour
@@ -22,6 +24,12 @@ public class SimpleShoot : MonoBehaviour
 
     public AudioSource source;
     public AudioClip fireSound;
+    public AudioClip reload;
+    public AudioClip noAmmo;
+    public Magazine currentMagazine;
+    public XRBaseInteractor socketInteractor;
+
+    private bool wasArmed = false;
 
     void Start()
     {
@@ -30,6 +38,9 @@ public class SimpleShoot : MonoBehaviour
 
         if (gunAnimator == null)
             gunAnimator = GetComponentInChildren<Animator>();
+
+        socketInteractor.onSelectEntered.AddListener(AddMagazine);
+        socketInteractor.onSelectExited.AddListener(RemoveMagazine);
     }
 
     void Update()
@@ -37,16 +48,50 @@ public class SimpleShoot : MonoBehaviour
         
     }
 
+    public void AddMagazine(XRBaseInteractable interactable)
+    {
+        currentMagazine = interactable.GetComponent<Magazine>();
+        source.PlayOneShot(reload);
+    }
+
+    public void RemoveMagazine(XRBaseInteractable interactable)
+    {
+        currentMagazine = null;
+        source.PlayOneShot(reload);
+    }
+
+    public void Slide()
+    {
+        
+        wasArmed = true;
+        source.PlayOneShot(reload);
+        
+    }
+
     public void PullTheTrigger()
     {
-        //Calls animation on the gun that has the relevant animation events that will fire
-        gunAnimator.SetTrigger("Fire");
+        if (currentMagazine && currentMagazine.bullets > 0 && wasArmed)
+        {
+            //Calls animation on the gun that has the relevant animation events that will fire
+            gunAnimator.SetTrigger("Fire");
+        }
+        else
+        {
+            source.PlayOneShot(noAmmo);
+        }
     }
 
     //This function creates the bullet behavior
     void Shoot()
     {
         source.PlayOneShot(fireSound);
+        currentMagazine.bullets -= 1;
+
+        if(currentMagazine.bullets == 0)
+        {
+            wasArmed = false;
+        }
+
         if (muzzleFlashPrefab)
         {
             //Create the muzzle flash
