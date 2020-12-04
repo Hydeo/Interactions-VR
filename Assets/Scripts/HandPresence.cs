@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
@@ -70,12 +71,13 @@ public class HandPresence : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(targetDevice == null)
+        if(targetDevice == null || spawnedHandModel == null || spawnedController == null)
         {
             TryInit();
         }
         else
         {
+            
             if (showController)
             {
                 spawnedHandModel.SetActive(false);
@@ -90,5 +92,21 @@ public class HandPresence : MonoBehaviour
         }
        
 
+    }
+
+    private void GetFeatureValues()
+    {
+        List<InputDevice> devices = new List<InputDevice>();
+        InputDevices.GetDevicesWithCharacteristics(inputDeviceCharacteristics, devices);
+
+        if (devices.Count == 1)
+        {
+            UnityEngine.XR.InputDevice device = devices[0];
+            targetDevice.TryGetFeatureValue(CommonUsages.deviceVelocity, out Vector3 velocity);
+            targetDevice.TryGetFeatureValue(CommonUsages.deviceVelocity, out Vector3 angularVelocity);
+
+            Debug.Log(string.Format("Device name '{0}' with velocity :  '{1}' and angular '{2}'", device.name, velocity, angularVelocity));
+        }
+        
     }
 }
