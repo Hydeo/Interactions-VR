@@ -241,6 +241,8 @@ public class Outline : MonoBehaviour {
 
     // Apply properties according to mode
     outlineFillMaterial.SetColor("_OutlineColor", outlineColor);
+    outlineFillMaterial.SetColor("_Color", outlineColor);
+    outlineFillMaterial.SetColor("_BaseColor", outlineColor);
 
     switch (outlineMode) {
       case Mode.OutlineAll:

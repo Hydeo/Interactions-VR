@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Magazine_1911
   - ALLOW_MANIPULATION
+  - GRAVITY_GLOVE_PRIORITY_0
+  - GRAVITY_GLOVE_PRIORITY_1
   layers:
   - Default
   - TransparentFX

@@ -16,52 +16,44 @@ public class GravityGloves : MonoBehaviour
     //Enum used to select action (I named it spell because I initially intended this to be one of many actions)
     public enum Spell { NONE, ATTRACT };
 
-    [Header("Links")]
-    //Left Hand's child "ObjectAttachmentPoint"
+    XRRig xr_rig;
+    InputDevice handDevice;
     [SerializeField]
-    Transform left_hand_triplet;
-    //Right Hand's child "ObjectAttachmentPoint"
+    InputDeviceCharacteristics handDeviceCharacteristics;
+
     [SerializeField]
-    Transform right_hand_triplet;
+    Transform handTransform;
     //LayerMask excluding player colliders from Raycasting
     [SerializeField]
     LayerMask player_complement_mask;
     //Particle System to use on targeted objects
     [SerializeField]
-    Transform grabbity_tracker;
-
-    /* SteamVR Input */
-
-    //Grip button (I don't own a Valve Index, knuckles may work differently)
-    [SerializeField]
-    public InputDeviceCharacteristics inputLeftDeviceCharacteristics;
-    public InputDeviceCharacteristics inputRightDeviceCharacteristics;
-
+    Transform grabbityTracker;
     //To show current target
-    public LineRenderer glove_line_renderer;
-
-    /*Current data*/
-    public Spell current_spell;
-    [Header("Parameters")]
-    [Range(0.0f, 1.0f)]
-    //How much hand movement is needed to trigger the object's leap?
     [SerializeField]
-    float attraction_spell_sensitivity;
+    LineRenderer handLineRenderer;
+    /*Current data*/
+    [SerializeField]
+    Spell current_spell;
+    //How much hand movement is needed to trigger the object's leap?
+    [Range(0.0f, 1.0f)]
+    [SerializeField]
+    float attractionSpellSensitivity;
 
-    //Attached SteamVR Player Component Components
-    XRRig xr_rig;
+    [SerializeField]
+    List<GameObject> currentCollisions;
+    [SerializeField]
+    GameObject collisionVolume;
+    private RaycastHit handRaycastHit;
 
-    //Buffers
-    private RaycastHit left_hand_raycast_hit, right_hand_raycast_hit;
-    //private SteamVR_Input_Sources in_source_buffer;
-
-    /* ATTRACTION BUFFERS*/
-    private Transform attr_left_target, attr_right_target;
-
+    /* BUFFERS*/
+    private Transform currentSelectedTarget;
     //Tracked Controller devices (position, velocity, ...)
-    private InputDevice leftDevice;
-    private InputDevice rightDevice;
     private Transform particulesInstance;
+
+    public String ALLOW_MANIPULATION_TAG = "ALLOW_MANIPULATION";
+    public Color reachableObjectOutlineColor;
+    public Color targetedReachableObjectOutlineColor;
     // Start is called before the first frame update
     void Start()
     {
@@ -69,34 +61,57 @@ public class GravityGloves : MonoBehaviour
         Init();
     }
 
+    public void Yolo()
+    {
+        Debug.Log("yolooooo");
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        /*if (other.gameObject.tag == ALLOW_MANIPULATION_TAG)
+        {
+            currentCollisions.Add(other.gameObject);
+
+            Outline objectOutline = other.gameObject.GetComponent<Outline>();
+            if (objectOutline)
+            {   
+                objectOutline.OutlineColor = reachableObjectOutlineColor;
+                objectOutline.enabled = true;
+            }
+        }*/
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        /*if (other.gameObject.tag == ALLOW_MANIPULATION_TAG)
+        {
+            currentCollisions.Remove(other.gameObject);
+
+            Outline objectOutline = other.gameObject.GetComponent<Outline>();
+            if (objectOutline)
+            {
+                objectOutline.enabled = false;
+            }
+        }*/
+    }
+
     private void Init()
     {
         //Get Linerenderer exisiting in the current object
-        glove_line_renderer = GetComponent<LineRenderer>();
+        handLineRenderer = GetComponent<LineRenderer>();
 
-        //Get left controller
-        List<UnityEngine.XR.InputDevice> leftDevices = new List<InputDevice>();
-        InputDevices.GetDevicesWithCharacteristics(inputLeftDeviceCharacteristics, leftDevices);
-        if (leftDevices.Count == 1)
+        //Get controller
+        List<InputDevice> handDevices = new List<InputDevice>();
+        InputDevices.GetDevicesWithCharacteristics(handDeviceCharacteristics, handDevices);
+        if (handDevices.Count == 1)
         {
-            leftDevice = leftDevices[0];
+            handDevice = handDevices[0];
         }
         else
         {
             Debug.Log(string.Format("More or less than one left controller device detected for GravityGloves"));
         }
 
-        //Get right controller
-        List<UnityEngine.XR.InputDevice> rightDevices = new List<UnityEngine.XR.InputDevice>();
-        InputDevices.GetDevicesWithCharacteristics(inputRightDeviceCharacteristics, rightDevices);
-        if (rightDevices.Count == 1)
-        {
-            rightDevice = rightDevices[0];
-        }
-        else
-        {
-            Debug.Log(string.Format("More  or less than one right controller device detected for GravityGloves"));
-        }
     }
 
     private Vector3 GetDeviceVelocity(InputDevice d)
@@ -119,24 +134,34 @@ public class GravityGloves : MonoBehaviour
 
     private void UpdateLineRendererPosition(Vector3 startPosition, Vector3 endPosition)
     {
-        glove_line_renderer.SetPosition(1, startPosition);
-        glove_line_renderer.SetPosition(0, endPosition);
+        handLineRenderer.SetPosition(1, startPosition);
+        handLineRenderer.SetPosition(0, endPosition);
     }
 
+    private bool TargetUnfocused()
+    {
+        return
+            (particulesInstance != null && particulesInstance.gameObject != null) //If we have particules showing
+            && (!IsGripActivated(handDevice) && currentSelectedTarget != null) // The player is not gripping and we had a target
+            || (IsGripActivated(handDevice) && currentSelectedTarget != null && (handRaycastHit.transform == null || (handRaycastHit.transform != null && handRaycastHit.transform.tag != ALLOW_MANIPULATION_TAG)));//If we grip, had a target but don't aim at anytarget anymore
+    }
+
+    private Transform LookForTarget()
+    {
+
+        return null;
+    }
     // Update is called once per frame
     void Update()
     {
 
-        if (rightDevice == null || leftDevice == null)
+        if (handDevice == null)
         {
             Init();
         }
 
-        //What is each hand pointing to?
-        Physics.Raycast(left_hand_triplet.transform.position, left_hand_triplet.forward, out left_hand_raycast_hit, 50, player_complement_mask);
-        Physics.Raycast(right_hand_triplet.transform.position, right_hand_triplet.forward, out right_hand_raycast_hit, 50, player_complement_mask);
-        Debug.DrawRay(right_hand_triplet.transform.position, right_hand_triplet.forward, Color.green);
-        Debug.DrawRay(left_hand_triplet.transform.position, left_hand_triplet.forward, Color.green);
+        //What is hand pointing to?
+        Physics.Raycast(handTransform.transform.position, handTransform.forward, out handRaycastHit, collisionVolume.GetComponent<MeshCollider>().bounds.size.x * collisionVolume.transform.localScale.x, player_complement_mask);
 
         /* Spell code */
         switch (current_spell)
@@ -146,69 +171,43 @@ public class GravityGloves : MonoBehaviour
             /* --------------------------------- */
             case Spell.ATTRACT:
                 {
-                    /*
-                    //If grip is pressed, change attraction target
-                    if (IsGripActivated(leftDevice) && left_hand_raycast_hit.transform != null && left_hand_raycast_hit.transform.tag == "ALLOW_MANIPULATION")
-                    {
-                        attr_left_target = left_hand_raycast_hit.transform;
-                        //Create and start particle system
-                        Transform tracker = Instantiate(grabbity_tracker, attr_left_target.position, Quaternion.Euler(0.0f, 0.0f, 0.0f));
-                        tracker.SetParent(attr_left_target);
 
+                    //If we aim at a valid target
+                    if (handRaycastHit.transform != null)
+                    {
+                        UpdateLineRendererPosition(transform.InverseTransformPoint(this.transform.position), transform.InverseTransformPoint(handRaycastHit.transform.position));
+                        handLineRenderer.enabled = true;
+                    }
+                    else if (handLineRenderer.enabled)
+                    {
+                        handLineRenderer.enabled = false;
                     }
 
-
-                    //Check for flick of left hand
-                    if (attr_left_target != null && Vector3.Dot(GetDeviceVelocity(leftDevice), (Camera.main.transform.forward - Camera.main.transform.up)) < -attraction_spell_sensitivity)
+                    //If we trigger aiming at a valid target
+                    if (currentSelectedTarget == null && IsGripActivated(handDevice) && handRaycastHit.transform != null && handRaycastHit.transform.tag == ALLOW_MANIPULATION_TAG)
                     {
-                        //Calculate velocity and apply it to the target
-                        Vector3 calculated_velocity = ComplementarCalculations.CalculateParabola(attr_left_target.transform.position, left_hand_triplet.position);
-                        attr_left_target.GetComponent<Rigidbody>().velocity = calculated_velocity;
-                        //Destroy particle system
-                        Destroy(attr_left_target.GetChild(1).gameObject);
-                        attr_left_target = null;
-                    }
-                    */
-
-                    //If grip is pressed, change attraction target
-
-                    if (right_hand_raycast_hit.transform != null)
-                    {
-                        UpdateLineRendererPosition(GetDevicePosition(rightDevice), transform.InverseTransformPoint(right_hand_raycast_hit.transform.position));
-                        glove_line_renderer.enabled = true;
-                    }
-                    else
-                    {
-                        glove_line_renderer.enabled = false;
-                    }
-
-                    if (attr_right_target == null && IsGripActivated(rightDevice) && right_hand_raycast_hit.transform != null && right_hand_raycast_hit.transform.tag == "ALLOW_MANIPULATION")
-                    {
-                        attr_right_target = right_hand_raycast_hit.transform;
+                        currentSelectedTarget = handRaycastHit.transform;
                         //Create particle system
-                        particulesInstance = Instantiate(grabbity_tracker, attr_right_target.position, Quaternion.Euler(0.0f, 0.0f, 0.0f));
-                        particulesInstance.SetParent(attr_right_target);
+                        particulesInstance = Instantiate(grabbityTracker, currentSelectedTarget.position, Quaternion.Euler(0.0f, 0.0f, 0.0f));
+                        particulesInstance.SetParent(currentSelectedTarget);
 
                     }
-                    else if ((particulesInstance != null && particulesInstance.gameObject != null)
-                        && (!IsGripActivated(rightDevice) && attr_right_target != null)
-                        || (IsGripActivated(rightDevice) && attr_right_target != null && (right_hand_raycast_hit.transform == null || (right_hand_raycast_hit.transform != null && right_hand_raycast_hit.transform.tag != "ALLOW_MANIPULATION"))))
+                    else if (TargetUnfocused())
                     {
                         Destroy(particulesInstance.gameObject);
-                        particulesInstance = attr_right_target = null;
+                        particulesInstance = currentSelectedTarget = null;
                     }
 
-                    //Check for flick of right hand
-                    if (attr_right_target != null && Vector3.Dot(GetDeviceVelocity(rightDevice), (xr_rig.cameraGameObject.transform.forward - xr_rig.cameraGameObject.transform.up)) < -attraction_spell_sensitivity)
+                    //Check for flick of hand
+                    if (currentSelectedTarget != null && Vector3.Dot(GetDeviceVelocity(handDevice), (xr_rig.cameraGameObject.transform.forward - xr_rig.cameraGameObject.transform.up)) < -attractionSpellSensitivity)
                     {
                         //Calculate velocity and apply it to the target
-                        Vector3 calculated_velocity = ComplementarCalculations.CalculateParabola(attr_right_target.transform.position, right_hand_triplet.position);
-                        attr_right_target.GetComponent<Rigidbody>().velocity = calculated_velocity;
+                        Vector3 calculated_velocity = ComplementarCalculations.CalculateParabola(currentSelectedTarget.transform.position, handTransform.position);
+                        currentSelectedTarget.GetComponent<Rigidbody>().velocity = calculated_velocity;
                         //Destroy particle system
                         Destroy(particulesInstance.gameObject);
-                        particulesInstance = attr_right_target = null;
+                        particulesInstance = currentSelectedTarget = null;
                     }
-
                     break;
                 }
             default:
