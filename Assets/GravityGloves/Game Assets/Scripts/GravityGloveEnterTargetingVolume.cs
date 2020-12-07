@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class GravityGloveTargetFocus : MonoBehaviour
+public class GravityGloveEnterTargetingVolume : MonoBehaviour
 {
     public GravityGloves gravityGlove;
-    public UnityEvent onTriggerEnter;
-    public UnityEvent onTriggerExit;
+    public UnityEvent<Collider> onTriggerEnter;
+    public UnityEvent<Collider> onTriggerExit;
 
     private void OnTriggerEnter(Collider other)
     {
-        onTriggerEnter.Invoke();
+        onTriggerEnter.Invoke(other);
     }
 
     private void OnTriggerExit(Collider other)
     {
-        onTriggerExit.Invoke();
+        onTriggerExit.Invoke(other);
     }
 }

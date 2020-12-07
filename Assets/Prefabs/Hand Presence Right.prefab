@@ -18,8 +18,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 6277356663795458565}
         m_TargetAssemblyTypeName: GravityGloves, Assembly-CSharp
-        m_MethodName: Yolo
-        m_Mode: 1
+        m_MethodName: OnFocusTriggerEnter
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -30,7 +30,19 @@ MonoBehaviour:
         m_CallState: 2
   onTriggerExit:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6277356663795458565}
+        m_TargetAssemblyTypeName: GravityGloves, Assembly-CSharp
+        m_MethodName: OnFocusTriggerExit
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1024667113863119518
 GameObject:
   m_ObjectHideFlags: 0
@@ -151,7 +163,7 @@ MonoBehaviour:
   collisionVolume: {fileID: 8180422945777437334}
   ALLOW_MANIPULATION_TAG: ALLOW_MANIPULATION
   reachableObjectOutlineColor: {r: 0.8867924, g: 0.5517801, b: 0.16313636, a: 1}
-  targetedReachableObjectOutlineColor: {r: 0, g: 0.02782917, b: 1, a: 1}
+  focusObjectOutlineColor: {r: 0.030118108, g: 1, b: 0, a: 1}
 --- !u!120 &6277356663795458562
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -266,6 +278,49 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1456839420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8180422945777437334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d880c842708b2f4fb198d14ab548ee4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gravityGlove: {fileID: 0}
+  onTriggerEnter:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 6277356663795458565}
+        m_TargetAssemblyTypeName: GravityGloves, Assembly-CSharp
+        m_MethodName: OnReachableTriggerEnter
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onTriggerExit:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 6277356663795458565}
+        m_TargetAssemblyTypeName: GravityGloves, Assembly-CSharp
+        m_MethodName: OnReachableTriggerExit
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1001 &639714682
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -275,7 +330,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1748967523045512, guid: 3067d9bc573646846a758efc3071a8f2, type: 3}
       propertyPath: m_Name
-      value: Gravity_Glove_Targeting_Volume_High_Priority
+      value: Gravity_Glove_Targeting_Volume_Focus
       objectReference: {fileID: 0}
     - target: {fileID: 1748967523045512, guid: 3067d9bc573646846a758efc3071a8f2, type: 3}
       propertyPath: m_TagString

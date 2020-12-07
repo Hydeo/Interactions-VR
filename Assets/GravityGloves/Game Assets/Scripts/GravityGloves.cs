@@ -41,19 +41,22 @@ public class GravityGloves : MonoBehaviour
     float attractionSpellSensitivity;
 
     [SerializeField]
-    List<GameObject> currentCollisions;
+    List<GameObject> currentObjectsReachable;
+    GameObject currentObjectFocused;
+
     [SerializeField]
     GameObject collisionVolume;
     private RaycastHit handRaycastHit;
 
     /* BUFFERS*/
-    private Transform currentSelectedTarget;
     //Tracked Controller devices (position, velocity, ...)
     private Transform particulesInstance;
 
     public String ALLOW_MANIPULATION_TAG = "ALLOW_MANIPULATION";
     public Color reachableObjectOutlineColor;
-    public Color targetedReachableObjectOutlineColor;
+    public Color focusObjectOutlineColor;
+    public bool isGloveActivated = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -61,38 +64,55 @@ public class GravityGloves : MonoBehaviour
         Init();
     }
 
-    public void Yolo()
+    public void OnFocusTriggerEnter(Collider other)
     {
-        Debug.Log("yolooooo");
+        if (other.gameObject.CompareTag(ALLOW_MANIPULATION_TAG) && !isGloveActivated)
+        {
+            UpdateObjectOutlineIfManipulable(focusObjectOutlineColor, other);
+            currentObjectFocused = other.gameObject;
+        }
+    }
+    public void OnFocusTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag(ALLOW_MANIPULATION_TAG) && !isGloveActivated)
+        {
+            UpdateObjectOutlineIfManipulable(reachableObjectOutlineColor, other);
+            currentObjectFocused = null;
+        }
     }
 
-    private void OnTriggerEnter(Collider other)
+    public void OnReachableTriggerEnter(Collider other)
     {
-        /*if (other.gameObject.tag == ALLOW_MANIPULATION_TAG)
+        if (other.gameObject.CompareTag(ALLOW_MANIPULATION_TAG))
         {
-            currentCollisions.Add(other.gameObject);
-
-            Outline objectOutline = other.gameObject.GetComponent<Outline>();
-            if (objectOutline)
-            {   
-                objectOutline.OutlineColor = reachableObjectOutlineColor;
-                objectOutline.enabled = true;
-            }
-        }*/
+            UpdateObjectOutlineIfManipulable(reachableObjectOutlineColor, other);
+            currentObjectsReachable.Add(other.gameObject);
+        }
     }
 
-    private void OnTriggerExit(Collider other)
+    public void OnReachableTriggerExit(Collider other)
     {
-        /*if (other.gameObject.tag == ALLOW_MANIPULATION_TAG)
+        if (other.gameObject.CompareTag(ALLOW_MANIPULATION_TAG))
         {
-            currentCollisions.Remove(other.gameObject);
-
             Outline objectOutline = other.gameObject.GetComponent<Outline>();
             if (objectOutline)
             {
                 objectOutline.enabled = false;
             }
-        }*/
+            currentObjectsReachable.Remove(other.gameObject);
+        }
+    }
+
+    private void UpdateObjectOutlineIfManipulable(Color c, Collider other)
+    {
+
+        Outline objectOutline = other.gameObject.GetComponent<Outline>();
+        if (objectOutline)
+        {
+            objectOutline.OutlineColor = c;
+            objectOutline.enabled = true;
+        }
+
     }
 
     private void Init()
@@ -138,30 +158,39 @@ public class GravityGloves : MonoBehaviour
         handLineRenderer.SetPosition(0, endPosition);
     }
 
+    private void UpdateLineRenderer()
+    {
+        //If we aim at a valid target
+        if (currentObjectFocused != null)
+        {
+            UpdateLineRendererPosition(transform.InverseTransformPoint(this.transform.position), transform.InverseTransformPoint(currentObjectFocused.transform.position));
+            handLineRenderer.enabled = true;
+        }
+        else if (handLineRenderer.enabled)
+        {
+            handLineRenderer.enabled = false;
+        }
+    }
+
     private bool TargetUnfocused()
     {
         return
-            (particulesInstance != null && particulesInstance.gameObject != null) //If we have particules showing
-            && (!IsGripActivated(handDevice) && currentSelectedTarget != null) // The player is not gripping and we had a target
-            || (IsGripActivated(handDevice) && currentSelectedTarget != null && (handRaycastHit.transform == null || (handRaycastHit.transform != null && handRaycastHit.transform.tag != ALLOW_MANIPULATION_TAG)));//If we grip, had a target but don't aim at anytarget anymore
+            (particulesInstance != null && particulesInstance.gameObject != null) //If we have  particules showing
+            && (!IsGripActivated(handDevice) && currentObjectFocused != null) // The player is not gripping and we had a target
+            || (IsGripActivated(handDevice) && currentObjectFocused != null && currentObjectFocused != null);//If we grip, had a target but don't aim at anytarget anymore
     }
 
-    private Transform LookForTarget()
-    {
-
-        return null;
-    }
     // Update is called once per frame
     void Update()
     {
 
-        if (handDevice == null)
+        if (handDevice == null || !handDevice.isValid)
         {
             Init();
         }
 
         //What is hand pointing to?
-        Physics.Raycast(handTransform.transform.position, handTransform.forward, out handRaycastHit, collisionVolume.GetComponent<MeshCollider>().bounds.size.x * collisionVolume.transform.localScale.x, player_complement_mask);
+        //Physics.Raycast(handTransform.transform.position, handTransform.forward, out handRaycastHit, collisionVolume.GetComponent<MeshCollider>().bounds.size.x * collisionVolume.transform.localScale.x, player_complement_mask);
 
         /* Spell code */
         switch (current_spell)
@@ -171,42 +200,39 @@ public class GravityGloves : MonoBehaviour
             /* --------------------------------- */
             case Spell.ATTRACT:
                 {
-
-                    //If we aim at a valid target
-                    if (handRaycastHit.transform != null)
+                    
+                    if(!IsGripActivated(handDevice))
                     {
-                        UpdateLineRendererPosition(transform.InverseTransformPoint(this.transform.position), transform.InverseTransformPoint(handRaycastHit.transform.position));
-                        handLineRenderer.enabled = true;
+                        isGloveActivated = false;
                     }
-                    else if (handLineRenderer.enabled)
-                    {
-                        handLineRenderer.enabled = false;
-                    }
+                    UpdateLineRenderer();
 
                     //If we trigger aiming at a valid target
-                    if (currentSelectedTarget == null && IsGripActivated(handDevice) && handRaycastHit.transform != null && handRaycastHit.transform.tag == ALLOW_MANIPULATION_TAG)
+                    if (currentObjectFocused != null && IsGripActivated(handDevice) && !isGloveActivated)
                     {
-                        currentSelectedTarget = handRaycastHit.transform;
                         //Create particle system
-                        particulesInstance = Instantiate(grabbityTracker, currentSelectedTarget.position, Quaternion.Euler(0.0f, 0.0f, 0.0f));
-                        particulesInstance.SetParent(currentSelectedTarget);
-
+                        particulesInstance = Instantiate(grabbityTracker, currentObjectFocused.transform.position, Quaternion.Euler(0.0f, 0.0f, 0.0f));
+                        particulesInstance.SetParent(currentObjectFocused.transform);
+                        isGloveActivated = true;
                     }
-                    else if (TargetUnfocused())
+                    else if (!isGloveActivated && particulesInstance != null)
                     {
                         Destroy(particulesInstance.gameObject);
-                        particulesInstance = currentSelectedTarget = null;
+                        particulesInstance = null;
                     }
 
                     //Check for flick of hand
-                    if (currentSelectedTarget != null && Vector3.Dot(GetDeviceVelocity(handDevice), (xr_rig.cameraGameObject.transform.forward - xr_rig.cameraGameObject.transform.up)) < -attractionSpellSensitivity)
+                    if (currentObjectFocused != null && particulesInstance!= null && Vector3.Dot(GetDeviceVelocity(handDevice), (xr_rig.cameraGameObject.transform.forward - xr_rig.cameraGameObject.transform.up)) < -attractionSpellSensitivity)
                     {
                         //Calculate velocity and apply it to the target
-                        Vector3 calculated_velocity = ComplementarCalculations.CalculateParabola(currentSelectedTarget.transform.position, handTransform.position);
-                        currentSelectedTarget.GetComponent<Rigidbody>().velocity = calculated_velocity;
+                        Vector3 calculated_velocity = ComplementarCalculations.CalculateParabola(currentObjectFocused.transform.position, handTransform.position);
+                        currentObjectFocused.GetComponent<Rigidbody>().velocity = calculated_velocity;
                         //Destroy particle system
-                        Destroy(particulesInstance.gameObject);
-                        particulesInstance = currentSelectedTarget = null;
+                        if (particulesInstance != null)
+                        {
+                            Destroy(particulesInstance.gameObject);
+                            particulesInstance = null;
+                        }
                     }
                     break;
                 }
