@@ -97,6 +97,10 @@ public class GravityGloves : MonoBehaviour
         if (IsOnInteractableLayer(other))
         {
             Outline objectOutline = other.gameObject.GetComponent<Outline>();
+            if (objectOutline == null)
+            {
+                objectOutline = other.gameObject.GetComponentInParent<Outline>();
+            }
             if (objectOutline)
             {
                 objectOutline.enabled = false;
@@ -113,6 +117,12 @@ public class GravityGloves : MonoBehaviour
     {
 
         Outline objectOutline = other.gameObject.GetComponent<Outline>();
+        
+        if(objectOutline == null)
+        {
+            objectOutline = other.gameObject.GetComponentInParent<Outline>();
+        }
+        
         if (objectOutline)
         {
             objectOutline.OutlineColor = c;
