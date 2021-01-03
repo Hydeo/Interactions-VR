@@ -15,7 +15,7 @@ Then I started creating some interactable props :
 
 Very simple levers : 
 
-![](Gif/LeverInteraction.gif)
+![](Gif/LeverInteraction-compressed.gif)
 
 A "realistic" gun interaction let's say :
 
